@@ -6,24 +6,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dahlhoffKevin/WebApiAuthKit/authKitHttpErrorHandler"
+	"github.com/dahlhoffKevin/WebApiAuthKit/errorhandler"
 )
 
-func checkBearerTokenIntegritiy(bearerToken string) *authKitHttpErrorHandler.HTTPError {
+func checkBearerTokenIntegritiy(bearerToken string) *errorhandler.HTTPError {
 	//vallidate bearertoken in db
 	fmt.Printf("Bearer-Token to check: %v", bearerToken)
-	return authKitHttpErrorHandler.New(http.StatusNotImplemented, "not yet implemented")
+	return errorhandler.New(http.StatusNotImplemented, "not yet implemented")
 }
 
-func getBearerTokenFromRequestHeader(r *http.Request) (string, *authKitHttpErrorHandler.HTTPError) {
+func getBearerTokenFromRequestHeader(r *http.Request) (string, *errorhandler.HTTPError) {
 	reqToken := r.Header.Get("Authorization")
 	if reqToken == "" {
-		return "", authKitHttpErrorHandler.New(http.StatusUnauthorized, "could not validate bearer token")
+		return "", errorhandler.New(http.StatusUnauthorized, "could not validate bearer token")
 	}
 
 	splitToken := strings.Split(reqToken, "Bearer ")
 	if len(splitToken) != 2 {
-		return "", authKitHttpErrorHandler.New(http.StatusUnauthorized, "could not validate bearer token format")
+		return "", errorhandler.New(http.StatusUnauthorized, "could not validate bearer token format")
 	}
 
 	return splitToken[1], nil
@@ -36,17 +36,17 @@ func AuthMiddlewareBearer(next http.HandlerFunc) http.HandlerFunc {
 
 		bearerToken, err := getBearerTokenFromRequestHeader(r)
 		if err != nil {
-			authKitHttpErrorHandler.Write(w, err)
+			errorhandler.Write(w, err)
 			return
 		}
 		if bearerToken == "" {
-			authKitHttpErrorHandler.Write(w, authKitHttpErrorHandler.New(http.StatusUnauthorized, "could not validate bearer token"))
+			errorhandler.Write(w, errorhandler.New(http.StatusUnauthorized, "could not validate bearer token"))
 			return
 		}
 
 		errAuth := checkBearerTokenIntegritiy(bearerToken)
 		if errAuth != nil {
-			authKitHttpErrorHandler.Write(w, errAuth)
+			errorhandler.Write(w, errAuth)
 			fmt.Printf("[unauthorized: %v]\n", errAuth.Error())
 			return
 		}
